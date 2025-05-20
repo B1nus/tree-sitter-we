@@ -120,6 +120,16 @@
             "named": true
           }
         ]
+      },
+      "namespace": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "name",
+            "named": true
+          }
+        ]
       }
     },
     "children": {

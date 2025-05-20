@@ -25,6 +25,10 @@ module.exports = grammar({
     'except',
   ],
 
+  conflicts: $ => [
+    [$.variant_literal, $.call],
+  ],
+
   rules: {
     // TODO: add the actual grammar rules
     source_file: $ => repeat($.statement),
@@ -83,6 +87,7 @@ module.exports = grammar({
     ),
 
     call: $ => seq(
+      optional(repeat(seq(field("namespace", $.name),'.'))),
       field("name", $.name),
       '(',
       optional(
