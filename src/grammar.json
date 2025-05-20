@@ -450,7 +450,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "_newline"
+          "name": "_indent"
         }
       ]
     },
@@ -472,13 +472,26 @@
             "type": "CHOICE",
             "members": [
               {
-                "type": "SYMBOL",
-                "name": "if"
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "if"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "expression"
+                  }
+                ]
               },
               {
                 "type": "BLANK"
               }
             ]
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_newline"
           }
         ]
       }
@@ -1713,6 +1726,10 @@
     [
       "variant_literal",
       "call"
+    ],
+    [
+      "expression",
+      "record_literal"
     ]
   ],
   "precedences": [],

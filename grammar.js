@@ -27,6 +27,7 @@ module.exports = grammar({
 
   conflicts: $ => [
     [$.variant_literal, $.call],
+    [$.expression, $.record_literal],
   ],
 
   rules: {
@@ -105,12 +106,13 @@ module.exports = grammar({
     if: $ => seq(
       field("keyword", 'if'),
       $.expression,
-      $._newline,
+      $._indent,
     ),
 
     else: $ => prec.right(seq(
       field("keyword", 'else'),
-      optional($.if),
+      optional(seq('if', $.expression)),
+      $._newline,
     )),
 
     use: $ => seq(

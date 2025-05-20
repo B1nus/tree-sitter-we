@@ -33,7 +33,7 @@
 (record_literal name: (name) @type field: (name) @property)
 (variant_literal name: (name) @type field: (name) @property)
 
-(call namespace: (name) @label name: (name) @function)
+(call namespace: (name) @variable name: (name) @function)
 (call name: (name) @function)
 
 (use alias: (name) @variable)
