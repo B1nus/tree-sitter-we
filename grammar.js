@@ -119,8 +119,8 @@ module.exports = grammar({
     ),
 
     repeat: $ => seq(
+      optional(seq(field("name", $.name), ":")),
       field("keyword", 'repeat'),
-      field("name", optional($.name)),
       optional($.expression),
       $._newline,
     ),
@@ -194,6 +194,7 @@ module.exports = grammar({
       $.record_literal,
       $.variant_literal,
       $.call,
+      $.name,
     ),
 
     list: $ => seq(

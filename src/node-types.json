@@ -241,6 +241,10 @@
           "named": true
         },
         {
+          "type": "name",
+          "named": true
+        },
+        {
           "type": "record_literal",
           "named": true
         },

@@ -1,33 +1,41 @@
-(function_definition keyword: ("function") @keyword name: (name) @function)
+(function_definition name: (name) @function)
 (parameter_list parameter: (name) @variable.parameter)
-
-(comment) @comment
-(type) @type
 
 (ignorable_variable name: (name) @variable)
 (variable_binding name: (name) @variable)
 
-(repeat keyword: ("repeat") @keyword)
-(repeat keyword: ("repeat") @keyword name: (name) @label)
+[
+ "repeat"
+ "break"
+ "continue"
+ "return"
+ "variant"
+ "record"
+ "if"
+ "else"
+ "use"
+ "as"
+ "function"
+ "and"
+ "or"
+ "not"
+ "xor"
+] @keyword
 
-(break keyword: ("break") @keyword name: (name) @label)
-(continue keyword: ("continue") @keyword name: (name) @label)
+(repeat name: (name) @label)
 
-(return keyword: ("return") @keyword)
+(break name: (name) @label)
+(continue name: (name) @label)
 
-(record keyword: ("record") @keyword name: (name) @type field: (name) @property)
-(variant keyword: ("variant") @keyword name: (name) @type field: (name) @property)
+(record name: (name) @type field: (name) @property)
+(variant  name: (name) @type field: (name) @property)
 
 (record_literal name: (name) @type field: (name) @property)
 (variant_literal name: (name) @type field: (name) @property)
 
-(if keyword: ("if") @keyword)
-(else keyword: ("else") @keyword)
-
 (call name: (name) @function)
 
-(use keyword: ("use") @keyword)
-(use keyword: ("as") @keyword alias: (name) @variable)
+(use alias: (name) @variable)
 
 (unary_expression operator: [("+") ("-")] @operator)
 (unary_expression operator: "not" @keyword.operator)
@@ -38,4 +46,5 @@
 [ (true) (false) ] @keyword
 (escape_sequence) @constant.builtin
 (string) @string
-
+(comment) @comment
+(type) @type
