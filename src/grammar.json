@@ -249,7 +249,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "_expression"
+          "name": "expression"
         },
         {
           "type": "SYMBOL",
@@ -257,7 +257,7 @@
         }
       ]
     },
-    "_expression": {
+    "expression": {
       "type": "STRING",
       "value": "1"
     },

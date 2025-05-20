@@ -74,11 +74,11 @@ module.exports = grammar({
         optional($.type),
       ))),
       '=',
-      $._expression,
+      $.expression,
       $.newline,
     ),
 
-    _expression: $ => '1',
+    expression: $ => '1',
 
     newline: $ => seq(optional('\r'), '\n'),
 

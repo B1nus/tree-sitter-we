@@ -131,6 +131,10 @@
       "required": true,
       "types": [
         {
+          "type": "expression",
+          "named": true
+        },
+        {
           "type": "name",
           "named": true
         },
@@ -189,10 +193,6 @@
     "named": false
   },
   {
-    "type": "1",
-    "named": false
-  },
-  {
     "type": "=",
     "named": false
   },
@@ -200,6 +200,10 @@
     "type": "comment",
     "named": true,
     "extra": true
+  },
+  {
+    "type": "expression",
+    "named": true
   },
   {
     "type": "f64",
