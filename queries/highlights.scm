@@ -33,7 +33,7 @@
 (record_literal name: (name) @type field: (name) @property)
 (variant_literal name: (name) @type field: (name) @property)
 
-(call namespace: (name) @variable name: (name) @function)
+(call namespace: (name) @method name: (name) @function)
 (call name: (name) @function)
 
 (use alias: (name) @variable)
@@ -42,6 +42,10 @@
 (unary_expression operator: "not" @keyword.operator)
 (binary_expression operator: [("+") ("-") ("*") ("/") ("^") ("%") ] @operator)
 (binary_expression operator: [("and") ("or") ("xor")] @keyword.operator)
+
+(expression name: (name) @variable)
+
+(type usertype: (name) @type)
 
 [ (integer) (float) (char) ] @number
 [ (true) (false) ] @keyword

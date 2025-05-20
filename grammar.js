@@ -38,7 +38,7 @@ module.exports = grammar({
       $.function_definition,
       $.variable_binding,
       $.variable_assignment,
-      seq($.call, $._newline),
+      $.call,
       $.if,
       $.else,
       $.use,
@@ -51,11 +51,13 @@ module.exports = grammar({
       $.comment,
     ),
 
-    break: $ => seq(field("keyword", 'break'), field("name", optional($.name)), $._newline),
+    block: $ => seq($._indent, repeat($.statement), $._dedent),
 
-    continue: $ => seq(field("keyword", 'continue'), field("name", optional($.name)), $._newline),
+    break: $ => seq('break', field("name", optional($.name)), $._newline),
 
-    return: $ => seq(field("keyword", 'return'),
+    continue: $ => seq('continue', field("name", optional($.name)), $._newline),
+
+    return: $ => seq('return',
       optional(seq(
         $.expression,
         repeat(seq(',', $.expression))
@@ -64,7 +66,7 @@ module.exports = grammar({
     ),
 
     record: $ => seq(
-      field("keyword", 'record'),
+      'record',
       field("name", $.name),
       $._indent,
       seq(
@@ -76,7 +78,7 @@ module.exports = grammar({
     ),
 
     variant: $ => seq(
-      field("keyword", 'variant'),
+      'variant',
       field("name", $.name),
       $._indent,
       seq(
@@ -104,22 +106,22 @@ module.exports = grammar({
     ),
 
     if: $ => seq(
-      field("keyword", 'if'),
+      'if',
       $.expression,
-      $._indent,
+      $.block,
     ),
 
     else: $ => prec.right(seq(
-      field("keyword", 'else'),
+      'else',
       optional(seq('if', $.expression)),
-      $._newline,
+      $.block,
     )),
 
     use: $ => seq(
-      field("keyword", 'use'),
+      'use',
       field("path", $.string),
       optional(seq(
-        field("keyword", 'as'),
+        'as',
         field("alias", $.name)
       )),
       $._newline,
@@ -127,16 +129,17 @@ module.exports = grammar({
 
     repeat: $ => seq(
       optional(seq(field("name", $.name), ":")),
-      field("keyword", 'repeat'),
+      'repeat',
       optional($.expression),
-      $._newline,
+      $.block,
     ),
 
     function_definition: $ => prec.left(seq(
-      field("keyword", 'function'),
+      'function',
       field("name", $.name),
       field("parameters", $.parameter_list),
       field("result", optional($.result_list)),
+      optional($.block),
     )),
 
     parameter_list: $ => seq(
@@ -201,12 +204,12 @@ module.exports = grammar({
       $.record_literal,
       $.variant_literal,
       $.call,
-      $.name,
+      field("name", $.name),
     ),
 
     list: $ => seq(
       '[',
-      optional(seq($.expression, repeat(seq(',', $.expression)))),
+      seq($.expression, repeat(seq(',', $.expression))),
       ']'
     ),
 
@@ -306,7 +309,7 @@ module.exports = grammar({
       seq('{', $.type, '}'),
       seq('?', $.type),
       seq($.type, '!', $.type),
-      $.name,
+      field("usertype", $.name),
     )),
 
     true: _ => "true",
