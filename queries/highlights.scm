@@ -34,6 +34,7 @@
 (variant_literal name: (name) @type field: (name) @property)
 
 (call namespace: (name) @label name: (name) @function)
+(call name: (name) @function)
 
 (use alias: (name) @variable)
 
