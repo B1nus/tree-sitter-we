@@ -18,6 +18,9 @@
 (record keyword: ("record") @keyword name: (name) @type field: (name) @property)
 (variant keyword: ("variant") @keyword name: (name) @type field: (name) @property)
 
+(record_literal name: (name) @type field: (name) @property)
+(variant_literal name: (name) @type field: (name) @property)
+
 (if keyword: ("if") @keyword)
 (else keyword: ("else") @keyword)
 
@@ -26,7 +29,13 @@
 (use keyword: ("use") @keyword)
 (use keyword: ("as") @keyword alias: (name) @variable)
 
-[ (integer) (float) ] @number
-[ (true) (false) ] @constant
+(unary_expression operator: [("+") ("-")] @operator)
+(unary_expression operator: "not" @keyword.operator)
+(binary_expression operator: [("+") ("-") ("*") ("/") ("^") ("%") ] @operator)
+(binary_expression operator: [("and") ("or") ("xor")] @keyword.operator)
+
+[ (integer) (float) (char) ] @number
+[ (true) (false) ] @keyword
+(escape_sequence) @constant.builtin
 (string) @string
 

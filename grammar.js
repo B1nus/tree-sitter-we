@@ -15,6 +15,16 @@ module.exports = grammar({
     $.comment
   ],
 
+  externals: $ => [
+    $._newline,
+    $._indent,
+    $._dedent,
+    ']',
+    ')',
+    '}',
+    'except',
+  ],
+
   rules: {
     // TODO: add the actual grammar rules
     source_file: $ => repeat($.statement),
@@ -23,7 +33,7 @@ module.exports = grammar({
       $.function_definition,
       $.variable_binding,
       $.variable_assignment,
-      $.call,
+      seq($.call, $._newline),
       $.if,
       $.else,
       $.use,
@@ -36,31 +46,41 @@ module.exports = grammar({
       $.comment,
     ),
 
-    break: $ => seq(field("keyword", 'break'), field("name", optional($.name)), $.newline),
+    break: $ => seq(field("keyword", 'break'), field("name", optional($.name)), $._newline),
 
-    continue: $ => seq(field("keyword", 'continue'), field("name", optional($.name)), $.newline),
+    continue: $ => seq(field("keyword", 'continue'), field("name", optional($.name)), $._newline),
 
     return: $ => seq(field("keyword", 'return'),
       optional(seq(
         $.expression,
         repeat(seq(',', $.expression))
       )),
-      $.newline,
+      $._newline,
     ),
 
-    record: $ => prec.right(seq(
+    record: $ => seq(
       field("keyword", 'record'),
       field("name", $.name),
-      $.newline,
-      repeat1(seq(field("field", $.name), $.type, $.newline))
-    )),
+      $._indent,
+      seq(
+        field("field", $.name),
+        $.type,
+        repeat(seq($._newline, field("field", $.name), $.type))
+      ),
+      $._dedent,
+    ),
 
-    variant: $ => prec.right(seq(
+    variant: $ => seq(
       field("keyword", 'variant'),
       field("name", $.name),
-      $.newline,
-      repeat1(seq(field("field", $.name), optional($.type), $.newline))
-    )),
+      $._indent,
+      seq(
+        field("field", $.name),
+        optional($.type),
+        repeat(seq($._newline, field("field", $.name), optional($.type)))
+      ),
+      $._dedent,
+    ),
 
     call: $ => seq(
       field("name", $.name),
@@ -75,13 +95,12 @@ module.exports = grammar({
         )
       ),
       ')',
-      $.newline
     ),
 
     if: $ => seq(
       field("keyword", 'if'),
       $.expression,
-      $.newline,
+      $._newline,
     ),
 
     else: $ => prec.right(seq(
@@ -96,15 +115,15 @@ module.exports = grammar({
         field("keyword", 'as'),
         field("alias", $.name)
       )),
-      $.newline,
+      $._newline,
     ),
 
-    repeat: $ => prec.left(seq(
+    repeat: $ => seq(
       field("keyword", 'repeat'),
       field("name", optional($.name)),
       optional($.expression),
-      $.newline,
-    )),
+      $._newline,
+    ),
 
     function_definition: $ => prec.left(seq(
       field("keyword", 'function'),
@@ -137,7 +156,7 @@ module.exports = grammar({
         field("name", $.name),
         $.type,
       )),
-      $.newline,
+      $._newline,
     )),
 
     variable_assignment: $ => prec.left(seq(
@@ -149,7 +168,7 @@ module.exports = grammar({
         ))
       ),
       seq('=', $.expression),
-      $.newline,
+      $._newline,
     )),
 
     ignorable_variable: $ => choice(
@@ -168,6 +187,7 @@ module.exports = grammar({
       $.true,
       $.false,
       $.string,
+      $.char,
       $.list,
       $.set,
       $.map,
@@ -194,55 +214,56 @@ module.exports = grammar({
       '}'
     ),
 
-    record_literal: $ => seq(
-      $.name,
-      $.newline,
-      repeat1(
-        seq($.name, $.expression, $.newline)
-      )
-    ),
+    record_literal: $ => prec.left(seq(
+      field("name", $.name),
+      $._indent,
+      seq(
+        field("field", $.name),
+        $.expression,
+        repeat(seq(
+          $._newline,
+          field("field", $.name),
+          $.expression,
+        ))
+      ),
+      $._dedent,
+    )),
 
-    variant_literal: $ => seq($.name, '.', $.name, $.expression),
-
-    binary_expression: $ => prec.left(
-      2,
-      choice(
-        seq($.expression, "+", $.expression),
-        seq($.expression, "-", $.expression),
-        seq($.expression, "*", $.expression),
-        seq($.expression, "/", $.expression),
-        seq($.expression, "%", $.expression),
-        seq($.expression, "^", $.expression),
-      )
-    ),
+    variant_literal: $ => prec.left(seq(field("name", $.name), '.', field("field", $.name), $.expression)),
 
     unary_expression: $ => prec.left(
-      choice(
-        seq("+", $.expression),
-        seq("-", $.expression),
-        seq("not", $.expression),
+      12,
+      seq(
+        field("operator", choice("not", "+", "-")),
+        $.expression
       )
     ),
 
-    char: $ => seq(
-      "'",
-      choice(
-        /[^'\\]/,
-        seq("\\", /./)
-      ),
-      "'"
+    binary_expression: $ => choice(
+      prec.left(3, seq($.expression, field("operator", choice("and", "xor", "or")), $.expression)),
+      prec.left(4, seq($.expression, field("operator", choice("==", "!=", "<", "<=", ">", ">=")), $.expression)),
+      prec.left(9, seq($.expression, field("operator", choice("+", "-")), $.expression)),
+      prec.left(10, seq($.expression, field("operator", choice("*", "/", "%")), $.expression)),
+      prec.left(11, seq($.expression, field("operator", "^"), $.expression)),
     ),
+
+    char: $ => seq("'", optional(choice($.escape_sequence, /./)), "'"),
 
     string: $ => seq(
       '"',
-      repeat(choice(
-        /[^"\\]/,
-        seq("\\", /./)
-      )),
-      '"',
+      repeat(choice($.escape_sequence, /[^"\\]+/)),
+      token.immediate('"')
     ),
 
-    newline: $ => seq(optional('\r'), '\n'),
+    escape_sequence: (_) => token.immediate(seq(
+      "\\",
+      choice(
+        /[^xu\n]/,
+        /u[0-9a-fA-F]{4}/,
+        /u\{[0-9a-fA-F]+\}/,
+        /x[0-9a-fA-F]{2}/
+      )
+    )),
 
     float: $ => choice(
       /0x[0-9a-fA-F]+.[0-9a-fA-F]+/,
