@@ -1,0 +1,41 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
+  "highlights": "queries/highlights.scm",
+  "grammars": [
+    {
+      "name": "we",
+      "camelcase": "We",
+      "title": "We",
+      "scope": "source.we",
+      "file-types": [
+        "we"
+      ],
+      "injection-regex": "^we$",
+      "class-name": "TreeSitterWe"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "A simple typed and compiled language, trying to emulate the ease of use of lua and python without a garbage collector.",
+    "authors": [
+      {
+        "name": "Lini",
+        "email": "119787571+B1nus@users.noreply.github.com",
+        "url": "https://github.com/B1nus"
+      }
+    ],
+    "links": {
+      "repository": "https://github.com/B1nus/tree-sitter-we"
+    }
+  },
+  "bindings": {
+    "c": true,
+    "go": true,
+    "node": true,
+    "python": true,
+    "rust": true,
+    "swift": true,
+    "zig": false
+  }
+}
