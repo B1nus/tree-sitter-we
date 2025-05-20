@@ -7,8 +7,8 @@
 (ignorable_variable name: (name) @variable)
 (variable_binding name: (name) @variable)
 
-(repeat keyword: ("repeat"))
-(repeat name: (name) @label)
+(repeat keyword: ("repeat") @keyword)
+(repeat keyword: ("repeat") @keyword name: (name) @label)
 
 (break keyword: ("break") @keyword name: (name) @label)
 (continue keyword: ("continue") @keyword name: (name) @label)

@@ -1,4 +1,0 @@
-function hello_my_friend(x s64, y f64) s64, f64
-    x s64, y s64 = 1
-
-    // hello

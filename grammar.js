@@ -17,9 +17,9 @@ module.exports = grammar({
 
   rules: {
     // TODO: add the actual grammar rules
-    source_file: $ => repeat($._statement),
+    source_file: $ => repeat($.statement),
 
-    _statement: $ => choice(
+    statement: $ => choice(
       $.function_definition,
       $.variable_binding,
       $.variable_assignment,
@@ -99,12 +99,12 @@ module.exports = grammar({
       $.newline,
     ),
 
-    repeat: $ => seq(
+    repeat: $ => prec.left(seq(
       field("keyword", 'repeat'),
-      optional(field("name", $.name)),
+      field("name", optional($.name)),
       optional($.expression),
       $.newline,
-    ),
+    )),
 
     function_definition: $ => prec.left(seq(
       field("keyword", 'function'),
@@ -161,11 +161,67 @@ module.exports = grammar({
     ),
 
     expression: $ => choice(
+      $.unary_expression,
+      $.binary_expression,
       $.float,
       $.integer,
       $.true,
       $.false,
       $.string,
+      $.list,
+      $.set,
+      $.map,
+      $.record_literal,
+      $.variant_literal,
+      $.call,
+    ),
+
+    list: $ => seq(
+      '[',
+      optional(seq($.expression, repeat(seq(',', $.expression)))),
+      ']'
+    ),
+
+    set: $ => seq(
+      '{',
+      seq($.expression, repeat(seq(',', $.expression))),
+      '}'
+    ),
+
+    map: $ => seq(
+      '{',
+      seq($.expression, ':', $.expression, repeat(seq(',', $.expression, ':', $.expression))),
+      '}'
+    ),
+
+    record_literal: $ => seq(
+      $.name,
+      $.newline,
+      repeat1(
+        seq($.name, $.expression, $.newline)
+      )
+    ),
+
+    variant_literal: $ => seq($.name, '.', $.name, $.expression),
+
+    binary_expression: $ => prec.left(
+      2,
+      choice(
+        seq($.expression, "+", $.expression),
+        seq($.expression, "-", $.expression),
+        seq($.expression, "*", $.expression),
+        seq($.expression, "/", $.expression),
+        seq($.expression, "%", $.expression),
+        seq($.expression, "^", $.expression),
+      )
+    ),
+
+    unary_expression: $ => prec.left(
+      choice(
+        seq("+", $.expression),
+        seq("-", $.expression),
+        seq("not", $.expression),
+      )
     ),
 
     char: $ => seq(
@@ -190,11 +246,15 @@ module.exports = grammar({
 
     float: $ => choice(
       /0x[0-9a-fA-F]+.[0-9a-fA-F]+/,
+      /0o[0-7]+.[0-7]+/,
+      /0b[0-1]+.[0-1]+/,
       /[0-9]+.[0-9]+/,
     ),
 
     integer: $ => choice(
       /0x[0-9a-fA-F]+/,
+      /0o[0-7]+/,
+      /0b[0-1]+/,
       /[0-9]+/,
     ),
 
