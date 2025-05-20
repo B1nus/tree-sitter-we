@@ -1,15 +1,14 @@
 {
   "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
-  "highlights": "queries/highlights.scm",
   "grammars": [
     {
       "name": "we",
       "camelcase": "We",
-      "title": "We",
       "scope": "source.we",
       "file-types": [
         "we"
       ],
+      "highlights": "queries/highlights.scm",
       "injection-regex": "^we$",
       "class-name": "TreeSitterWe"
     }
