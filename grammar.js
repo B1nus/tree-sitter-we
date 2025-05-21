@@ -61,9 +61,9 @@ module.exports = grammar({
         "function",
         field("name", $.name),
         token.immediate('('),
-        list(seq(field("parameter", $.name), $.type), ','),
+        optional(list(seq(field("parameter", $.name), $.type), ',')),
         ')',
-        list($.type, ','),
+        optional(list($.type, ',')),
         $.block,
       ),
 
