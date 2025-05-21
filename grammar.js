@@ -18,18 +18,14 @@ module.exports = grammar({
 
 	extras: ($) => [/\s/, $.comment],
 
-	externals: ($) => [
-		$._newline,
-		$._indent,
-		$._dedent,
-	],
+	externals: ($) => [$._newline, $._indent, $._dedent],
 
 	rules: {
 		source_file: ($) => repeat($.statement),
 
 		statement: ($) =>
 			choice(
-        $.function,
+				$.function,
 				$.assignment,
 				$.binding,
 				$.call,
@@ -56,16 +52,16 @@ module.exports = grammar({
 
 		return: ($) => seq("return", optional(list($.expression, ",")), $._newline),
 
-    function: ($) =>
-      seq(
-        "function",
-        field("name", $.name),
-        token.immediate('('),
-        optional(list(seq(field("parameter", $.name), $.type), ',')),
-        ')',
-        optional(list($.type, ',')),
-        $.block,
-      ),
+		function: ($) =>
+			seq(
+				"function",
+				field("name", $.name),
+				token.immediate("("),
+				optional(list(seq(field("parameter", $.name), $.type), ",")),
+				")",
+				optional(list($.type, ",")),
+				$.block,
+			),
 
 		record: ($) =>
 			seq(
@@ -73,7 +69,7 @@ module.exports = grammar({
 				field("name", $.name),
 				$._indent,
 				list(seq(field("field", $.name), $.type), $._newline),
-        repeat(choice($.function, $.variant, $.record)),
+				repeat(choice($.function, $.variant, $.record)),
 				$._dedent,
 			),
 
@@ -83,7 +79,7 @@ module.exports = grammar({
 				field("name", $.name),
 				$._indent,
 				list(seq(field("field", $.name), optional($.type)), $._newline),
-        repeat(choice($.function, $.variant, $.record)),
+				repeat(choice($.function, $.variant, $.record)),
 				$._dedent,
 			),
 
@@ -124,33 +120,39 @@ module.exports = grammar({
 
 		assignment: ($) =>
 			seq(
-				list(seq(choice("_", field("variable", $.path)), optional($.type)), ","),
+				list(
+					seq(choice("_", field("variable", $.path)), optional($.type)),
+					",",
+				),
 				"=",
-        list($.expression, ','),
+				list($.expression, ","),
 				$._newline,
 			),
 
 		expression: ($) =>
-			prec(2, choice(
-				$.float,
-				$.integer,
-				"true",
-				"false",
-        "e",
-        "pi",
-				$.string,
-				$.char,
-				$.unary_expression,
-				$.binary_expression,
-				seq("[", list($.expression, ","), "]"),
-				seq("{", list($.expression, ","), "}"),
-				seq("{", list(seq($.expression, ":", $.expression), ","), "}"),
-				$.record_literal,
-				$.variant_literal,
-				$.call,
-				field("variable", $.path),
-				seq("(", $.expression, ")"),
-			)),
+			prec(
+				2,
+				choice(
+					$.float,
+					$.integer,
+					"true",
+					"false",
+					"e",
+					"pi",
+					$.string,
+					$.char,
+					$.unary_expression,
+					$.binary_expression,
+					seq("[", list($.expression, ","), "]"),
+					seq("{", list($.expression, ","), "}"),
+					seq("{", list(seq($.expression, ":", $.expression), ","), "}"),
+					$.record_literal,
+					$.variant_literal,
+					$.call,
+					field("variable", $.path),
+					seq("(", $.expression, ")"),
+				),
+			),
 
 		record_literal: ($) =>
 			seq(
@@ -161,12 +163,14 @@ module.exports = grammar({
 			),
 
 		variant_literal: ($) =>
-			prec.left(seq(
-				optional(field("variant", $.path)),
-				".",
-				field("field", $.name),
-				optional($.expression),
-			)),
+			prec.left(
+				seq(
+					optional(field("variant", $.path)),
+					".",
+					field("field", $.name),
+					optional($.expression),
+				),
+			),
 
 		unary_expression: ($) =>
 			prec.left(
@@ -179,7 +183,7 @@ module.exports = grammar({
 				[1, choice("and", "xor", "or")],
 				[2, choice("==", "!=", "<", "<=", ">", ">=")],
 				[3, choice("+", "-")],
-        [4, choice("<<", ">>")],
+				[4, choice("<<", ">>")],
 				[5, choice("*", "/", "%", "^")],
 			];
 
@@ -226,32 +230,43 @@ module.exports = grammar({
 		integer: ($) => choice(/0x[0-9a-fA-F]+/, /0o[0-7]+/, /0b[0-1]+/, /[0-9]+/),
 
 		path: ($) =>
-			prec(1, choice(
-				field("name", $.name),
-				seq($.path, ".", field("field", $.name)),
-			)),
+			prec(
+				1,
+				choice(field("name", $.name), seq($.path, ".", field("field", $.name))),
+			),
 
 		type: ($) =>
-			prec.left(2, choice(
-				"s8",
-				"s16",
-				"s32",
-				"s64",
-				"u8",
-				"u16",
-				"u32",
-				"u64",
-				"f32",
-				"f64",
-				"bool",
-				seq("[", $.type, "]"),
-				seq("{", $.type, ":", $.type, "}"),
-				seq("{", $.type, "}"),
-				field("variable", $.path),
-				$.function_type,
-			)),
+			prec.left(
+				2,
+				choice(
+					"s8",
+					"s16",
+					"s32",
+					"s64",
+					"u8",
+					"u16",
+					"u32",
+					"u64",
+					"f32",
+					"f64",
+					"bool",
+					seq("[", $.type, "]"),
+					seq("{", $.type, ":", $.type, "}"),
+					seq("{", $.type, "}"),
+					field("variable", $.path),
+					$.function_type,
+				),
+			),
 
 		function_type: ($) =>
-			prec.left(seq("function", token.immediate("("), list($.type, ","), ")", list($.type, ","))),
+			prec.left(
+				seq(
+					"function",
+					token.immediate("("),
+					list($.type, ","),
+					")",
+					list($.type, ","),
+				),
+			),
 	},
 });
