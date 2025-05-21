@@ -7,318 +7,251 @@
 /// <reference types="tree-sitter-cli/dsl" />
 // @ts-check
 
+list = function (rule, separator) {
+	return seq(rule, repeat(seq(separator, rule)), optional(separator));
+};
+
 module.exports = grammar({
-  name: "we",
+	name: "we",
 
-  extras: $ => [
-    /\s/,
-    $.comment
-  ],
+	word: ($) => $.name,
 
-  externals: $ => [
-    $._newline,
-    $._indent,
-    $._dedent,
-    ']',
-    ')',
-    '}',
-    'except',
-  ],
+	extras: ($) => [/\s/, $.comment],
 
-  conflicts: $ => [
-    [$.expression, $.record_literal],
-  ],
+	externals: ($) => [
+		$._newline,
+		$._indent,
+		$._dedent,
+	],
 
-  rules: {
-    // TODO: add the actual grammar rules
-    source_file: $ => repeat($.statement),
+	rules: {
+		source_file: ($) => repeat($.statement),
 
-    statement: $ => choice(
-      $.function_definition,
-      $.variable_binding,
-      $.variable_assignment,
-      $.call,
-      $.if,
-      $.else,
-      $.use,
-      $.repeat,
-      $.break,
-      $.continue,
-      $.return,
-      $.record,
-      $.variant,
-      $.comment,
-    ),
+		statement: ($) =>
+			choice(
+        $.function,
+				$.assignment,
+				$.binding,
+				$.call,
+				$.if,
+				$.use,
+				$.repeat,
+				$.break,
+				$.continue,
+				$.return,
+				$.record,
+				$.variant,
+			),
 
-    block: $ => seq($._indent, repeat($.statement), $._dedent),
+		name: ($) => /([a-z]([a-z_0-9]*[a-z0-9])?)/,
+		path: ($) => prec.left(list($.name, ".")),
+		comment: ($) => token(seq("#", /.*/)),
 
-    break: $ => seq('break', field("name", optional($.name)), $._newline),
+		block: ($) => seq($._indent, repeat($.statement), $._dedent),
 
-    continue: $ => seq('continue', field("name", optional($.name)), $._newline),
+		break: ($) => seq("break", field("label", optional($.name)), $._newline),
 
-    return: $ => seq('return',
-      optional(seq(
-        $.expression,
-        repeat(seq(',', $.expression))
-      )),
-      $._newline,
-    ),
+		continue: ($) =>
+			seq("continue", field("label", optional($.name)), $._newline),
 
-    record: $ => seq(
-      'record',
-      field("name", $.name),
-      $._indent,
+		return: ($) => seq("return", optional(list($.expression, ",")), $._newline),
+
+    function: ($) =>
       seq(
-        field("field", $.name),
-        $.type,
-        repeat(seq($._newline, field("field", $.name), $.type))
+        "function",
+        field("name", $.name),
+        token.immediate('('),
+        list(seq(field("parameter", $.name), $.type), ','),
+        ')',
+        list($.type, ','),
+        $.block,
       ),
-      $._dedent,
-    ),
 
-    variant: $ => seq(
-      'variant',
-      field("name", $.name),
-      $._indent,
-      seq(
-        field("field", $.name),
-        optional($.type),
-        repeat(seq($._newline, field("field", $.name), optional($.type)))
-      ),
-      $._dedent,
-    ),
+		record: ($) =>
+			seq(
+				"record",
+				field("name", $.name),
+				$._indent,
+				list(seq(field("field", $.name), $.type), $._newline),
+        repeat(choice($.function, $.variant, $.record)),
+				$._dedent,
+			),
 
-    call: $ => seq(
-      field("name", $.namespaced_name),
-      token.immediate('('),
-      optional(
-        seq(
-          $.expression,
-          repeat(seq(
-            ',',
-            $.expression
-          ))
-        )
-      ),
-      ')',
-    ),
+		variant: ($) =>
+			seq(
+				"variant",
+				field("name", $.name),
+				$._indent,
+				list(seq(field("field", $.name), optional($.type)), $._newline),
+        repeat(choice($.function, $.variant, $.record)),
+				$._dedent,
+			),
 
-    if: $ => seq(
-      'if',
-      $.expression,
-      $.block,
-    ),
+		call: ($) =>
+			seq(
+				field("path", $.path),
+				token.immediate("("),
+				optional(list($.expression, ",")),
+				")",
+			),
 
-    else: $ => prec.right(seq(
-      'else',
-      optional(seq('if', $.expression)),
-      $.block,
-    )),
+		if: ($) =>
+			seq(
+				"if",
+				$.expression,
+				$.block,
+				optional(seq("else", choice($.if, $.block))),
+			),
 
-    use: $ => seq(
-      'use',
-      field("path", $.string),
-      optional(seq(
-        'as',
-        field("alias", $.name)
-      )),
-      $._newline,
-    ),
+		use: ($) =>
+			seq(
+				"use",
+				$.string,
+				optional(seq("as", field("alias", $.name))),
+				$._newline,
+			),
 
-    repeat: $ => seq(
-      optional(seq(field("name", $.name), ":")),
-      'repeat',
-      optional($.expression),
-      $.block,
-    ),
+		repeat: ($) =>
+			seq(
+				"repeat",
+				optional($.expression),
+				optional(seq("as", field("label", $.name))),
+				$.block,
+			),
 
-    function_definition: $ => prec.left(seq(
-      'function',
-      field("name", $.name),
-      field("parameters", $.parameter_list),
-      field("result", optional($.result_list)),
-      optional($.block),
-    )),
+		binding: ($) =>
+			prec(2, seq(list(field("variable", $.name), ","), $.type, $._newline)),
 
-    parameter_list: $ => seq(
-      '(',
-      optional(seq(
-        field("parameter", $.name),
-        $.type,
-        repeat(seq(',', 
-          field("parameter", $.name),
-          $.type))
-      )),
-      ')'
-    ),
+		assignment: ($) =>
+			seq(
+				list(seq(choice("_", $.path), optional($.type)), ","),
+				"=",
+        list($.expression, ','),
+				$._newline,
+			),
 
-    result_list: $ => seq(
-      $.type,
-      repeat(seq(',', $.type)),
-    ),
+		expression: ($) =>
+			prec(2, choice(
+				$.float,
+				$.integer,
+				"true",
+				"false",
+        "e",
+        "pi",
+				$.string,
+				$.char,
+				$.unary_expression,
+				$.binary_expression,
+				seq("[", list($.expression, ","), "]"),
+				seq("{", list($.expression, ","), "}"),
+				seq("{", list(seq($.expression, ":", $.expression), ","), "}"),
+				$.record_literal,
+				$.variant_literal,
+				$.call,
+				field("variable", $.path),
+				seq("(", $.expression, ")"),
+			)),
 
-    variable_binding: $ => prec.left(seq(
-      field("variable", $.name),
-      $.type,
-      repeat(seq(
-        field("variable", $.name),
-        $.type,
-      )),
-      $._newline,
-    )),
+		record_literal: ($) =>
+			seq(
+				field("record", $.path),
+				$._indent,
+				list(seq(field("field", $.name), $.expression), $._newline),
+				$._dedent,
+			),
 
-    variable_assignment: $ => prec.left(seq(
-      seq(
-        $.ignorable_variable,
-        repeat(seq(
-          ',',
-          $.ignorable_variable,
-        ))
-      ),
-      seq('=', $.expression),
-      $._newline,
-    )),
+		variant_literal: ($) =>
+			prec.left(seq(
+				optional(field("variant", $.path)),
+				".",
+				field("field", $.name),
+				optional($.expression),
+			)),
 
-    ignorable_variable: $ => choice(
-      '_',
-      seq(
-        field("variable", $.namespaced_name),
-        optional($.type)
-      )
-    ),
+		unary_expression: ($) =>
+			prec.left(
+				6,
+				seq(field("operator", choice("not", "+", "-")), $.expression),
+			),
 
-    expression: $ => choice(
-      $.unary_expression,
-      $.binary_expression,
-      $.float,
-      $.integer,
-      $.true,
-      $.false,
-      $.string,
-      $.char,
-      $.list,
-      $.set,
-      $.map,
-      $.record_literal,
-      $.variant_literal,
-      $.call,
-      field("variable", $.namespaced_name),
-      seq('(', $.expression, ')'),
-    ),
+		binary_expression: ($) => {
+			const table = [
+				[1, choice("and", "xor", "or")],
+				[2, choice("==", "!=", "<", "<=", ">", ">=")],
+				[3, choice("+", "-")],
+        [4, choice("<<", ">>")],
+				[5, choice("*", "/", "%", "^")],
+			];
 
-    list: $ => seq(
-      '[',
-      seq($.expression, repeat(seq(',', $.expression))),
-      ']'
-    ),
+			return choice(
+				...table.map(([num, rule]) =>
+					prec.left(
+						num,
+						seq($.expression, field("operator", rule), $.expression),
+					),
+				),
+			);
+		},
 
-    set: $ => seq(
-      '{',
-      seq($.expression, repeat(seq(',', $.expression))),
-      '}'
-    ),
+		char: ($) => seq("'", optional(choice($.escape_sequence, /./)), "'"),
 
-    map: $ => seq(
-      '{',
-      seq($.expression, ':', $.expression, repeat(seq(',', $.expression, ':', $.expression))),
-      '}'
-    ),
+		string: ($) =>
+			seq(
+				'"',
+				repeat(choice($.escape_sequence, /[^"\\]+/)),
+				token.immediate('"'),
+			),
 
-    record_literal: $ => prec.left(seq(
-      field("name", $.namespaced_name),
-      $._indent,
-      seq(
-        field("field", $.name),
-        $.expression,
-        repeat(seq(
-          $._newline,
-          field("field", $.name),
-          $.expression,
-        ))
-      ),
-      $._dedent,
-    )),
+		escape_sequence: (_) =>
+			token.immediate(
+				seq(
+					"\\",
+					choice(
+						/[^xu\n]/,
+						/u[0-9a-fA-F]{4}/,
+						/u\{[0-9a-fA-F]+\}/,
+						/x[0-9a-fA-F]{2}/,
+					),
+				),
+			),
 
-    variant_literal: $ => prec.left(seq(field("name", $.namespaced_name), '.', field("field", $.name), $.expression)),
+		float: ($) =>
+			choice(
+				/0x[0-9a-fA-F]+.[0-9a-fA-F]+/,
+				/0o[0-7]+.[0-7]+/,
+				/0b[0-1]+.[0-1]+/,
+				/[0-9]+.[0-9]+/,
+			),
 
-    unary_expression: $ => prec.left(
-      12,
-      seq(
-        field("operator", choice("not", "+", "-")),
-        $.expression
-      )
-    ),
+		integer: ($) => choice(/0x[0-9a-fA-F]+/, /0o[0-7]+/, /0b[0-1]+/, /[0-9]+/),
 
-    binary_expression: $ => choice(
-      prec.left(3, seq($.expression, field("operator", choice("and", "xor", "or")), $.expression)),
-      prec.left(4, seq($.expression, field("operator", choice("==", "!=", "<", "<=", ">", ">=")), $.expression)),
-      prec.left(9, seq($.expression, field("operator", choice("+", "-")), $.expression)),
-      prec.left(10, seq($.expression, field("operator", choice("*", "/", "%")), $.expression)),
-      prec.left(11, seq($.expression, field("operator", "^"), $.expression)),
-    ),
+		path: ($) =>
+			prec(1, choice(
+				field("name", $.name),
+				seq($.path, ".", field("field", $.name)),
+			)),
 
-    char: $ => seq("'", optional(choice($.escape_sequence, /./)), "'"),
+		type: ($) =>
+			prec.left(2, choice(
+				"s8",
+				"s16",
+				"s32",
+				"s64",
+				"u8",
+				"u16",
+				"u32",
+				"u64",
+				"f32",
+				"f64",
+				"bool",
+				seq("[", $.type, "]"),
+				seq("{", $.type, ":", $.type, "}"),
+				seq("{", $.type, "}"),
+				field("variable", $.path),
+				$.function_type,
+			)),
 
-    string: $ => seq(
-      '"',
-      repeat(choice($.escape_sequence, /[^"\\]+/)),
-      token.immediate('"')
-    ),
-
-    escape_sequence: (_) => token.immediate(seq(
-      "\\",
-      choice(
-        /[^xu\n]/,
-        /u[0-9a-fA-F]{4}/,
-        /u\{[0-9a-fA-F]+\}/,
-        /x[0-9a-fA-F]{2}/
-      )
-    )),
-
-    float: $ => choice(
-      /0x[0-9a-fA-F]+.[0-9a-fA-F]+/,
-      /0o[0-7]+.[0-7]+/,
-      /0b[0-1]+.[0-1]+/,
-      /[0-9]+.[0-9]+/,
-    ),
-
-    integer: $ => choice(
-      /0x[0-9a-fA-F]+/,
-      /0o[0-7]+/,
-      /0b[0-1]+/,
-      /[0-9]+/,
-    ),
-
-    namespaced_name: $ => prec.left(choice(
-      field("name", $.name),
-      seq($.namespaced_name, '.', field("field", $.name)),
-    )),
-
-    name: $ => /([a-z]([a-z_0-9]*[a-z0-9])?)/,
-
-    type: $ => prec.right(choice(
-      's8',
-      's16',
-      's32',
-      's64',
-      'u8',
-      'u16',
-      'u32',
-      'u64',
-      'f32',
-      'f64',
-      'bool',
-      seq('[', $.type, ']'),
-      seq('{', $.type, ':', $.type, '}'),
-      seq('{', $.type, '}'),
-      seq('?', $.type),
-      seq($.type, '!', $.type),
-      field("name", $.namespaced_name),
-    )),
-
-    true: _ => "true",
-    false: _ => "false",
-
-    comment: $ => token(seq('//', /.*/))
-  }
+		function_type: ($) =>
+			prec.left(seq("function", token.immediate("("), list($.type, ","), ")", list($.type, ","))),
+	},
 });
