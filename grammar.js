@@ -263,9 +263,9 @@ module.exports = grammar({
 				seq(
 					"function",
 					token.immediate("("),
-					list($.type, ","),
+					optional(list($.type, ",")),
 					")",
-					list($.type, ","),
+					optional(list($.type, ",")),
 				),
 			),
 	},
