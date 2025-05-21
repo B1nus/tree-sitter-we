@@ -89,7 +89,7 @@ module.exports = grammar({
 
 		call: ($) =>
 			seq(
-				field("function", $.path),
+				field("function", $.expression),
 				token.immediate("("),
 				optional(list($.expression, ",")),
 				")",

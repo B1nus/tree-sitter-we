@@ -46,11 +46,13 @@
 (variant  name: (name) @type field: (name) @property)
 
 (record_literal record: (path) @type field: (name) @property)
-(variant_literal variant: (path) @type field: (name) @property)
+(variant_literal variant: (path) @type field: (name) @constan.enum.member)
+(variant_literal field: (name) @constant.enum.member)
 
 (path  field: (name) @property)
 
-(call function: (path field: (name) @function.call))
+(call function: (expression variable: (path name: (name) @function.call)))
+(call function: (expression variable: (path field: (name) @function.call)))
 
 (use alias: (name) @variable)
 
