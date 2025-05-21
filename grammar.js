@@ -26,7 +26,6 @@ module.exports = grammar({
   ],
 
   conflicts: $ => [
-    [$.variant_literal, $.call],
     [$.expression, $.record_literal],
   ],
 
@@ -90,9 +89,8 @@ module.exports = grammar({
     ),
 
     call: $ => seq(
-      optional(repeat(seq(field("namespace", $.name),'.'))),
-      field("name", $.name),
-      '(',
+      field("name", $.namespaced_name),
+      token.immediate('('),
       optional(
         seq(
           $.expression,
@@ -160,10 +158,10 @@ module.exports = grammar({
     ),
 
     variable_binding: $ => prec.left(seq(
-      field("name", $.name),
+      field("variable", $.name),
       $.type,
       repeat(seq(
-        field("name", $.name),
+        field("variable", $.name),
         $.type,
       )),
       $._newline,
@@ -184,7 +182,7 @@ module.exports = grammar({
     ignorable_variable: $ => choice(
       '_',
       seq(
-        field("name", $.name),
+        field("variable", $.namespaced_name),
         optional($.type)
       )
     ),
@@ -204,7 +202,8 @@ module.exports = grammar({
       $.record_literal,
       $.variant_literal,
       $.call,
-      field("name", $.name),
+      field("variable", $.namespaced_name),
+      seq('(', $.expression, ')'),
     ),
 
     list: $ => seq(
@@ -226,7 +225,7 @@ module.exports = grammar({
     ),
 
     record_literal: $ => prec.left(seq(
-      field("name", $.name),
+      field("name", $.namespaced_name),
       $._indent,
       seq(
         field("field", $.name),
@@ -240,7 +239,7 @@ module.exports = grammar({
       $._dedent,
     )),
 
-    variant_literal: $ => prec.left(seq(field("name", $.name), '.', field("field", $.name), $.expression)),
+    variant_literal: $ => prec.left(seq(field("name", $.namespaced_name), '.', field("field", $.name), $.expression)),
 
     unary_expression: $ => prec.left(
       12,
@@ -290,6 +289,11 @@ module.exports = grammar({
       /[0-9]+/,
     ),
 
+    namespaced_name: $ => prec.left(choice(
+      field("name", $.name),
+      seq($.namespaced_name, '.', field("field", $.name)),
+    )),
+
     name: $ => /([a-z]([a-z_0-9]*[a-z0-9])?)/,
 
     type: $ => prec.right(choice(
@@ -309,7 +313,7 @@ module.exports = grammar({
       seq('{', $.type, '}'),
       seq('?', $.type),
       seq($.type, '!', $.type),
-      field("usertype", $.name),
+      field("name", $.namespaced_name),
     )),
 
     true: _ => "true",

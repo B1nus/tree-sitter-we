@@ -346,44 +346,19 @@
       "type": "SEQ",
       "members": [
         {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "REPEAT",
-              "content": {
-                "type": "SEQ",
-                "members": [
-                  {
-                    "type": "FIELD",
-                    "name": "namespace",
-                    "content": {
-                      "type": "SYMBOL",
-                      "name": "name"
-                    }
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "."
-                  }
-                ]
-              }
-            },
-            {
-              "type": "BLANK"
-            }
-          ]
-        },
-        {
           "type": "FIELD",
           "name": "name",
           "content": {
             "type": "SYMBOL",
-            "name": "name"
+            "name": "namespaced_name"
           }
         },
         {
-          "type": "STRING",
-          "value": "("
+          "type": "IMMEDIATE_TOKEN",
+          "content": {
+            "type": "STRING",
+            "value": "("
+          }
         },
         {
           "type": "CHOICE",
@@ -727,7 +702,7 @@
         "members": [
           {
             "type": "FIELD",
-            "name": "name",
+            "name": "variable",
             "content": {
               "type": "SYMBOL",
               "name": "name"
@@ -744,7 +719,7 @@
               "members": [
                 {
                   "type": "FIELD",
-                  "name": "name",
+                  "name": "variable",
                   "content": {
                     "type": "SYMBOL",
                     "name": "name"
@@ -827,10 +802,10 @@
           "members": [
             {
               "type": "FIELD",
-              "name": "name",
+              "name": "variable",
               "content": {
                 "type": "SYMBOL",
-                "name": "name"
+                "name": "namespaced_name"
               }
             },
             {
@@ -910,11 +885,28 @@
         },
         {
           "type": "FIELD",
-          "name": "name",
+          "name": "variable",
           "content": {
             "type": "SYMBOL",
-            "name": "name"
+            "name": "namespaced_name"
           }
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "("
+            },
+            {
+              "type": "SYMBOL",
+              "name": "expression"
+            },
+            {
+              "type": "STRING",
+              "value": ")"
+            }
+          ]
         }
       ]
     },
@@ -1059,7 +1051,7 @@
             "name": "name",
             "content": {
               "type": "SYMBOL",
-              "name": "name"
+              "name": "namespaced_name"
             }
           },
           {
@@ -1125,7 +1117,7 @@
             "name": "name",
             "content": {
               "type": "SYMBOL",
-              "name": "name"
+              "name": "namespaced_name"
             }
           },
           {
@@ -1512,6 +1504,44 @@
         }
       ]
     },
+    "namespaced_name": {
+      "type": "PREC_LEFT",
+      "value": 0,
+      "content": {
+        "type": "CHOICE",
+        "members": [
+          {
+            "type": "FIELD",
+            "name": "name",
+            "content": {
+              "type": "SYMBOL",
+              "name": "name"
+            }
+          },
+          {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "namespaced_name"
+              },
+              {
+                "type": "STRING",
+                "value": "."
+              },
+              {
+                "type": "FIELD",
+                "name": "field",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "name"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
     "name": {
       "type": "PATTERN",
       "value": "([a-z]([a-z_0-9]*[a-z0-9])?)"
@@ -1657,10 +1687,10 @@
           },
           {
             "type": "FIELD",
-            "name": "usertype",
+            "name": "name",
             "content": {
               "type": "SYMBOL",
-              "name": "name"
+              "name": "namespaced_name"
             }
           }
         ]
@@ -1702,10 +1732,6 @@
     }
   ],
   "conflicts": [
-    [
-      "variant_literal",
-      "call"
-    ],
     [
       "expression",
       "record_literal"
