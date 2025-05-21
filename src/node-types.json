@@ -2,17 +2,24 @@
   {
     "type": "assignment",
     "named": true,
-    "fields": {},
+    "fields": {
+      "variable": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "path",
+            "named": true
+          }
+        ]
+      }
+    },
     "children": {
       "multiple": true,
       "required": true,
       "types": [
         {
           "type": "expression",
-          "named": true
-        },
-        {
-          "type": "path",
           "named": true
         },
         {
@@ -173,7 +180,7 @@
     "type": "call",
     "named": true,
     "fields": {
-      "path": {
+      "function": {
         "multiple": false,
         "required": true,
         "types": [

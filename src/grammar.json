@@ -626,7 +626,7 @@
       "members": [
         {
           "type": "FIELD",
-          "name": "path",
+          "name": "function",
           "content": {
             "type": "SYMBOL",
             "name": "path"
@@ -908,8 +908,12 @@
                       "value": "_"
                     },
                     {
-                      "type": "SYMBOL",
-                      "name": "path"
+                      "type": "FIELD",
+                      "name": "variable",
+                      "content": {
+                        "type": "SYMBOL",
+                        "name": "path"
+                      }
                     }
                   ]
                 },
@@ -947,8 +951,12 @@
                             "value": "_"
                           },
                           {
-                            "type": "SYMBOL",
-                            "name": "path"
+                            "type": "FIELD",
+                            "name": "variable",
+                            "content": {
+                              "type": "SYMBOL",
+                              "name": "path"
+                            }
                           }
                         ]
                       },

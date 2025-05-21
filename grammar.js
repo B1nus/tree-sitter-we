@@ -89,7 +89,7 @@ module.exports = grammar({
 
 		call: ($) =>
 			seq(
-				field("path", $.path),
+				field("function", $.path),
 				token.immediate("("),
 				optional(list($.expression, ",")),
 				")",
@@ -124,7 +124,7 @@ module.exports = grammar({
 
 		assignment: ($) =>
 			seq(
-				list(seq(choice("_", $.path), optional($.type)), ","),
+				list(seq(choice("_", field("variable", $.path)), optional($.type)), ","),
 				"=",
         list($.expression, ','),
 				$._newline,
